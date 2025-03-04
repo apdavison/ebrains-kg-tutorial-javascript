@@ -72,9 +72,18 @@ function displayDatasetVersion(datasetVersion) {
       datasetVersion[`https://openminds.ebrains.eu/vocab/${propertyName}`];
   }
 
-  anchor = document.getElementById("accessibility");
-  let propertyValue = datasetVersion[`https://openminds.ebrains.eu/vocab/accessibility`];
-  anchor.innerHTML = propertyValue["https://openminds.ebrains.eu/vocab/name"];
+  const controlledTerms = [
+    "accessibility",
+    "dataType",
+    "ethicsAssessment",
+    "experimentalApproach",
+    "studyTarget"
+  ];
+  for (let propertyName of controlledTerms) {
+    anchor = document.getElementById(propertyName);
+    let propertyValue = datasetVersion[`https://openminds.ebrains.eu/vocab/${propertyName}`];
+    anchor.innerHTML = propertyValue["https://openminds.ebrains.eu/vocab/name"];
+  }
 
   anchor = document.getElementById("digitalIdentifier");
   propertyValue = datasetVersion[`https://openminds.ebrains.eu/vocab/digitalIdentifier`];
@@ -98,7 +107,15 @@ async function main() {
     const datasetVersionId = document.getElementById("datasetVersionID").value;
     try {
       const datasetVersion = await loadKGNode(datasetVersionId);
-      await followLinks(datasetVersion, ["accessibility", "digitalIdentifier"]);
+      const propertiesToFollow = [
+        "accessibility",
+        "digitalIdentifier",
+        "dataType",
+        "ethicsAssessment",
+        "experimentalApproach",
+        "studyTarget"
+      ];
+      await followLinks(datasetVersion, propertiesToFollow);
       displayDatasetVersion(datasetVersion);
     } catch (error) {
       showError(error);
