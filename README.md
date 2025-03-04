@@ -291,3 +291,59 @@ or by committing your changes to a branch, then move to the next stage of the tu
 ```
 git checkout part2
 ```
+
+## 4. Following links in the graph
+
+You will have noted that the "Accessibility" and "Digital identifier" properties are represented by URIs (a [URI](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) is like a [URL](https://en.wikipedia.org/wiki/URL), but doesn't necessarily resolve to a web page). In the JSON-LD document, they have the key "@id".
+
+These represent links (or connections) in the Knowledge Graph.
+Let's follow these links using the API.
+First, we can rename `loadDatasetVersion()` to `loadKGNode()`,
+because the code is not specific to dataset versions, but will work for any KG node.
+
+Now let's add a function to follow links in the graph.
+For this, we take the "@id" URI and extract the node identifier from the end of the URI, e.g.:
+
+```
+"https://kg.ebrains.eu/api/instances/df93b012-3bb6-4565-bce0-3bd2d3aed63b" → "df93b012-3bb6-4565-bce0-3bd2d3aed63b"
+```
+
+We can now use this identifier to retrieve the linked node using our just-renamed `loadKGNode()` function, and then update the JSON-LD document representing the dataset version, adding the linked documents we've just retrieved alongside the "@id".
+All of this code goes in a new function `followLinks()`.
+
+```javascript
+async function followLinks(node, propertyNames) {
+  /*
+    For the given list of property names, we get the link URI from the node,
+    extract the UUID from the URI, then use this to retrieve the linked node from the KG.
+    We then replace the original property in the node object
+    with the linked node that we've retrieved.
+  */
+  for (let propertyName of propertyNames) {
+    const propertyPath = `https://openminds.ebrains.eu/vocab/${propertyName}`;
+    const uri = node[propertyPath]["@id"];
+    const uuid = uri.split("/").slice(-1)[0];
+    const linkedNode = await loadKGNode(uuid);
+    node[propertyPath] = linkedNode;
+  }
+}
+```
+
+We then update the `displayDatasetVersion()` function to display the linked nodes appropriately.
+
+### Exercise
+
+Try extending the HTML table to show additional linked properties, for example "dataType", "ethicsAssessment", "experimentalApproach" and/or "studyTarget".
+
+When this is successfully running, save your changes using
+
+```
+git stash push
+```
+
+or by committing your changes to a branch, then move to the next stage of the tutorial using
+
+```
+git checkout part3
+```
+

@@ -23,9 +23,9 @@ async function getJSON(url) {
   }
 }
 
-async function loadDatasetVersion(datasetId) {
+async function loadKGNode(nodeId) {
   response = await getJSON(
-    baseUrl + "instances/" + datasetId + "?stage=RELEASED"
+    baseUrl + "instances/" + nodeId + "?stage=RELEASED"
   );
   if (response.error) {
     if (response.error === 401) {
@@ -34,8 +34,24 @@ async function loadDatasetVersion(datasetId) {
       throw new Error("Error. Status code " + response.error)
     }
   } else {
-    const datasetVersion = response.data;
-    return datasetVersion;
+    const node = response.data;
+    return node;
+  }
+}
+
+async function followLinks(node, propertyNames) {
+  /*
+    For the given list of property names, we get the link URI from the node,
+    extract the UUID from the URI, then use this to retrieve the linked node from the KG.
+    We then replace the original property in the node object
+    with the linked node that we've retrieved.
+  */
+  for (let propertyName of propertyNames) {
+    const propertyPath = `https://openminds.ebrains.eu/vocab/${propertyName}`;
+    const uri = node[propertyPath]["@id"];
+    const uuid = uri.split("/").slice(-1)[0];
+    const linkedNode = await loadKGNode(uuid);
+    node[propertyPath] = linkedNode;
   }
 }
 
@@ -56,15 +72,13 @@ function displayDatasetVersion(datasetVersion) {
       datasetVersion[`https://openminds.ebrains.eu/vocab/${propertyName}`];
   }
 
-  const linkPropertyNames = [
-    "accessibility",
-    "digitalIdentifier",
-  ];
-  for (let propertyName of linkPropertyNames) {
-    anchor = document.getElementById(propertyName);
-    anchor.innerHTML =
-      datasetVersion[`https://openminds.ebrains.eu/vocab/${propertyName}`]["@id"];
-  }
+  anchor = document.getElementById("accessibility");
+  let propertyValue = datasetVersion[`https://openminds.ebrains.eu/vocab/accessibility`];
+  anchor.innerHTML = propertyValue["https://openminds.ebrains.eu/vocab/name"];
+
+  anchor = document.getElementById("digitalIdentifier");
+  propertyValue = datasetVersion[`https://openminds.ebrains.eu/vocab/digitalIdentifier`];
+  anchor.innerHTML = propertyValue["https://openminds.ebrains.eu/vocab/identifier"];
 
   let tableAnchor = document.getElementsByTagName("table")[0];
   tableAnchor.style.display = "block";
@@ -83,7 +97,8 @@ async function main() {
   button.addEventListener("click", async (event) => {
     const datasetVersionId = document.getElementById("datasetVersionID").value;
     try {
-      const datasetVersion = await loadDatasetVersion(datasetVersionId);
+      const datasetVersion = await loadKGNode(datasetVersionId);
+      await followLinks(datasetVersion, ["accessibility", "digitalIdentifier"]);
       displayDatasetVersion(datasetVersion);
     } catch (error) {
       showError(error);
