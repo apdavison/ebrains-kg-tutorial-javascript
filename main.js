@@ -65,6 +65,9 @@ function displayDatasetVersion(datasetVersion) {
     anchor.innerHTML =
       datasetVersion[`https://openminds.ebrains.eu/vocab/${propertyName}`]["@id"];
   }
+
+  let tableAnchor = document.getElementsByTagName("table")[0];
+  tableAnchor.style.display = "block";
 }
 
 function showError(error) {
@@ -75,11 +78,15 @@ function showError(error) {
 }
 
 async function main() {
-  const datasetId = "bd5f91ff-e829-4b85-92eb-fc56991541f1";
-  try {
-    const datasetVersion = await loadDatasetVersion(datasetId);
-    displayDatasetVersion(datasetVersion);
-  } catch (error) {
-    showError(error);
-  }
+  const button = document.querySelector("button");
+
+  button.addEventListener("click", async (event) => {
+    const datasetVersionId = document.getElementById("datasetVersionID").value;
+    try {
+      const datasetVersion = await loadDatasetVersion(datasetVersionId);
+      displayDatasetVersion(datasetVersion);
+    } catch (error) {
+      showError(error);
+    }
+  });
 }
