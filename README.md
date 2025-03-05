@@ -347,3 +347,91 @@ or by committing your changes to a branch, then move to the next stage of the tu
 git checkout part3
 ```
 
+## 5. Searching the Knowledge Graph
+
+We've seen how to retrieve a metadata node from the Knowledge Graph if we know the node's identifier, and one way to follow links in the graph.
+In many cases, however, we don't know the node identifier, and so we need to search the graph to find datasets (or other objects) of interest.
+
+For this, the KG provides a query language, also based on JSON-LD.
+The [Query Builder](https://query.kg.ebrains.eu/) app provides a GUI for building such queries (see [video tutorial](https://docs.kg.ebrains.eu/9b511d36d7608eafc94ea43c918f16b6/tutorials.html).)
+
+The following query lets us search for dataset versions based on the dataset name.
+It returns the name, together with the "versionIdentifier" and "releaseDate" properties.
+
+```javascript
+{
+  "@context": {
+    "@vocab": "https://core.kg.ebrains.eu/vocab/query/",
+    "query": "http://example.org/",
+    "propertyName": {
+      "@id": "propertyName",
+      "@type": "@id"
+    },
+    "path": {
+      "@id": "path",
+      "@type": "@id"
+    }
+  },
+  "meta": {
+    "type": "https://openminds.ebrains.eu/core/DatasetVersion",
+    "responseVocab": "http://example.org/"
+  },
+  "structure": [
+    {
+      "propertyName": "query:fullName",
+      "path": "https://openminds.ebrains.eu/vocab/fullName",
+      "required": true,
+      "filter": {
+        "op": "CONTAINS",
+        "value": "APPPS1 Alzheimer disease mice"
+      }
+    },
+    {
+      "propertyName": "query:versionIdentifier",
+      "path": "https://openminds.ebrains.eu/vocab/versionIdentifier"
+    },
+    {
+      "propertyName": "query:releaseDate",
+      "path": "https://openminds.ebrains.eu/vocab/releaseDate"
+    }
+  ]
+}
+```
+
+Sending this query returns the following document:
+
+```json
+{
+  "data": [
+    {
+      "@context": {
+        "@vocab": "http://example.org/"
+      },
+      "releaseDate": "2020-04-21",
+      "versionIdentifier": "v1",
+      "fullName": "Excitability profile of CA1 pyramidal neurons in APPPS1 Alzheimer disease mice and control littermates"
+    }
+  ],
+  "total": 1,
+  "size": 1,
+  "from": 0
+}
+```
+
+Let's modify our web page to search for dataset versions based on their full name.
+First, we add a function `postQuery()`, similar to `getJSON()`, but targeting the `POST /queries/` endpoint of the API (note: queries you use regularly can be saved to the KG and run with a GET request, but for one-off or rarely-used queries the POST endpoint should be used).
+
+Next, we add a function `queryKG()`, which accepts a search term, constructs a JSON-LD query document similar to the one shown above, sends the query to the KG, and returns the results.
+
+Finally, we modify the HTML document and the `displayDatasetVersion()` function.
+The HTML document is much shorter now: since we don't know how many datasets we will retrieve,
+we cannot put the markup directly in the document; rather we need to add it with Javascript.
+
+Refresh the web page, and experiment with different search terms.
+
+Now move on to Part 4:
+
+```
+git checkout part4
+```
+

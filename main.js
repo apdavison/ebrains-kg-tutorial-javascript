@@ -6,13 +6,31 @@ For local use, the variable "authToken" should be replaced with a valid EBRAINS 
 
 const baseUrl = "https://core.kg.ebrains.eu/v3/";
 const authToken = "eyJhb...";
-const config = {
+
+const globalConfig = {
   headers: {
     Authorization: `Bearer ${authToken}`,
   },
 };
 
 async function getJSON(url) {
+  response = await fetch(url, globalConfig);
+  if (response.status === 200) {
+    return await response.json();
+  } else {
+    return {
+      error: response.status
+    }
+  }
+}
+
+async function postQuery(url, queryObj) {
+  const config = {
+    ...globalConfig,
+    method: "POST",
+    body: JSON.stringify(queryObj)
+  }
+  config.headers["Content-Type"] = "application/json";
   response = await fetch(url, config);
   if (response.status === 200) {
     return await response.json();
@@ -23,20 +41,23 @@ async function getJSON(url) {
   }
 }
 
+function checkResponse(response) {
+  if (response.error) {
+    if (response.error === 401) {
+      throw new Error("You are not authenticated. Perhaps your token has expired?");
+    } else {
+      throw new Error("Error. Status code " + response.error);
+    }
+  } else {
+    return response.data;
+  }
+}
+
 async function loadKGNode(nodeId) {
   response = await getJSON(
     baseUrl + "instances/" + nodeId + "?stage=RELEASED"
   );
-  if (response.error) {
-    if (response.error === 401) {
-      throw new Error("You are not authenticated. Perhaps your token has expired?")
-    } else {
-      throw new Error("Error. Status code " + response.error)
-    }
-  } else {
-    const node = response.data;
-    return node;
-  }
+  return checkResponse(response);
 }
 
 async function followLinks(node, propertyNames) {
@@ -55,68 +76,104 @@ async function followLinks(node, propertyNames) {
   }
 }
 
-function displayDatasetVersion(datasetVersion) {
-  let typeAnchor = document.getElementById("@type");
-  typeAnchor.innerHTML = datasetVersion["@type"];
+async function queryKG(searchTerm) {
+  const query = {
+    "@context": {
+      "@vocab": "https://core.kg.ebrains.eu/vocab/query/",
+      query: "http://example.org/",
+      propertyName: {
+        "@id": "propertyName",
+        "@type": "@id",
+      },
+      path: {
+        "@id": "path",
+        "@type": "@id",
+      },
+    },
+    meta: {
+      type: "https://openminds.ebrains.eu/core/DatasetVersion",
+      responseVocab: "http://example.org/",
+    },
+    structure: [
+      {
+        propertyName: "query:fullName",
+        path: "https://openminds.ebrains.eu/vocab/fullName",
+        required: true,
+        filter: {
+          op: "CONTAINS",
+          value: searchTerm,
+        },
+      },
+      {
+        propertyName: "query:versionIdentifier",
+        path: "https://openminds.ebrains.eu/vocab/versionIdentifier",
+      },
+      {
+        propertyName: "query:releaseDate",
+        path: "https://openminds.ebrains.eu/vocab/releaseDate",
+      },
+    ],
+  };
+  response = await postQuery(
+    baseUrl + "queries/?stage=RELEASED&restrictToSpaces=dataset&size=10",
+    query
+  );
+  return checkResponse(response);
+}
 
-  const textPropertyNames = [
-    "fullName",
-    "versionIdentifier",
-    "releaseDate"
-  ];
-
-  let anchor = null;
-  for (let propertyName of textPropertyNames) {
-    anchor = document.getElementById(propertyName);
-    anchor.innerHTML =
-      datasetVersion[`https://openminds.ebrains.eu/vocab/${propertyName}`];
-  }
-
-  const controlledTerms = [
-    "accessibility",
-    "dataType",
-    "ethicsAssessment",
-    "experimentalApproach",
-    "studyTarget"
-  ];
-  for (let propertyName of controlledTerms) {
-    anchor = document.getElementById(propertyName);
-    let propertyValue = datasetVersion[`https://openminds.ebrains.eu/vocab/${propertyName}`];
-    anchor.innerHTML = propertyValue["https://openminds.ebrains.eu/vocab/name"];
-  }
-
-  anchor = document.getElementById("digitalIdentifier");
-  propertyValue = datasetVersion[`https://openminds.ebrains.eu/vocab/digitalIdentifier`];
-  anchor.innerHTML = propertyValue["https://openminds.ebrains.eu/vocab/identifier"];
-
-  let tableAnchor = document.getElementsByTagName("table")[0];
-  tableAnchor.style.display = "block";
+function displayDatasetVersion(datasetVersion, index) {
+  /* Return a string containing an HTML table containing dataset version properties. */
+  return `<div class="datasetVersion">
+    <p>#${parseInt(index) + 1}</p>
+    <table>
+      <tbody>
+        <tr>
+          <th>Full name</th>
+          <td id="fullName-${index}">${datasetVersion.fullName}</td>
+        </tr>
+        <tr>
+          <th>Version identifier</th>
+          <td id="versionIdentifier-${index}">${datasetVersion.versionIdentifier}</td>
+        </tr>
+        <tr>
+          <th>Release date</th>
+          <td id="releaseDate-${index}">${datasetVersion.releaseDate}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>`
 }
 
 function showError(error) {
   let anchor = document.getElementById("errorMessages");
-  console.log(error);
   anchor.innerHTML = error;
   anchor.style.display = "block";
+}
+
+function removeError() {
+  let anchor = document.getElementById("errorMessages");
+  anchor.innerHTML = "";
+  anchor.style.display = "none";
 }
 
 async function main() {
   const button = document.querySelector("button");
 
   button.addEventListener("click", async (event) => {
-    const datasetVersionId = document.getElementById("datasetVersionID").value;
+    const searchTerm = document.getElementById("searchTerm").value;
+    const anchor = document.getElementById("results");
+    anchor.innerHTML = "";
+    removeError();
     try {
-      const datasetVersion = await loadKGNode(datasetVersionId);
-      const propertiesToFollow = [
-        "accessibility",
-        "digitalIdentifier",
-        "dataType",
-        "ethicsAssessment",
-        "experimentalApproach",
-        "studyTarget"
-      ];
-      await followLinks(datasetVersion, propertiesToFollow);
-      displayDatasetVersion(datasetVersion);
+      const datasetVersions = await queryKG(searchTerm);
+      console.log(datasetVersions);
+      if (datasetVersions.length > 0) {
+        for (let index in datasetVersions) {
+          anchor.innerHTML +=  displayDatasetVersion(datasetVersions[index], index);
+        }
+      } else {
+        throw new Error(`No results for query "${searchTerm}"`);
+      }
     } catch (error) {
       showError(error);
     }
