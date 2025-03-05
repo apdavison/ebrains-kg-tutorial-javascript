@@ -435,3 +435,148 @@ Now move on to Part 4:
 git checkout part4
 ```
 
+## 6. Searching across links
+
+In our query so far, we've only retrieved simple text properties.
+The query language also allows us to retrieve properties that represent links in the graph.
+
+For example, if we add the following to the query shown above, we will retrieve the DOI of the dataset, together with the names and locations (IRI) of the repositories that contain the actual data files for each dataset.
+
+```json
+{
+  "propertyName": "query:digitalIdentifier",
+  "path": "https://openminds.ebrains.eu/vocab/digitalIdentifier",
+  "structure": {
+    "propertyName": "query:identifier",
+    "path": "https://openminds.ebrains.eu/vocab/identifier"
+  }
+},
+{
+  "propertyName": "query:repository",
+  "path": "https://openminds.ebrains.eu/vocab/repository",
+  "structure": [
+    {
+      "propertyName": "query:name",
+      "path": "https://openminds.ebrains.eu/vocab/name"
+    },
+    {
+      "propertyName": "query:IRI",
+      "path": "https://openminds.ebrains.eu/vocab/IRI"
+    }
+  ]
+}
+```
+
+The search results will look something like this:
+
+```json
+{
+  "@context": {
+    "@vocab": "https://schema.hbp.eu/myQuery/"
+  },
+  "digitalIdentifier": [
+    {
+      "identifier": "https://doi.org/10.25493/YJFW-HPY"
+    }
+  ],
+  "versionIdentifier": "v1",
+  "fullName": "Excitability profile of CA1 pyramidal neurons in APPPS1 Alzheimer disease mice and control littermates",
+  "repository": [
+    {
+      "IRI": "https://object.cscs.ch/v1/AUTH_c0a333ecf7c045809321ce9d9ecdfdea/ext-d000001_ADNeuronModel_pub",
+      "name": "ext-d000001_ADNeuronModel_pub"
+    }
+  ],
+  "releaseDate": "2020-04-21"
+}
+```
+
+As an extra convenience, if a linked node has only a single property of interest (e.g., "digitalIdentifier"→"identifier") we can flatten the result by making the query "path" an array, e.g.:
+
+```json
+{
+  "propertyName": "query:digitalIdentifier",
+  "singleValue": "FIRST",
+  "path": [
+    "https://openminds.ebrains.eu/vocab/digitalIdentifier",
+    "https://openminds.ebrains.eu/vocab/identifier"
+  ]
+}
+```
+
+with the result:
+
+```json
+"digitalIdentifier": "https://doi.org/10.25493/YJFW-HPY"
+```
+
+instead of
+
+```json
+"digitalIdentifier": [
+    {
+      "identifier": "https://doi.org/10.25493/YJFW-HPY"
+    }
+]
+```
+
+### Inheritance of properties, and reverse links
+
+You may notice that some search terms give fewer results than you might have expected.
+Using the search term "Alzheimer" gives a single result with our web page,
+but [multiple responses in the KG Search UI](https://search.kg.ebrains.eu/?category=Dataset&q=Alzheimer).
+
+One reason for this is that the Search UI searches both the "fullName" and "description" properties.
+Another is that sometimes the fullName property comes from the parent dataset record, and is not set on an individual dataset version.
+
+openMINDS distinguishes between a `Dataset` and a `DatasetVersion`.
+Each dataset can have multiple versions.
+Both `Dataset` and `DatasetVersion` have "name" and "description" properties.
+The convention in the EBRAINS Knowledge Graph [Search UI](https://search.kg.ebrains.eu/) is that if the "name" property of a `DatasetVersion` is empty, it should inherit it from the parent `DataSet`.
+
+Fortunately, we can do the same thing in our query.
+In our original query above, if we modify the "fullName" part as follows,
+we will search the `fullName` property of the parent `Dataset`, not of the `DatasetVersion`.
+Note that the "path" is now an array rather than a string.
+The first element of the array represents the link from `DatasetVersion` to its parent `Dataset`.
+It is a "reverse" link, because "hasVersion" is a property of `Dataset`, which points to a `DatasetVersion`.
+
+```json
+{
+  "propertyName": "query:fullName",
+  "required": true,
+  "filter": {
+    "op": "CONTAINS",
+    "value": "Alzheimer"
+  },
+  "path": [
+    {
+      "@id": "https://openminds.ebrains.eu/vocab/hasVersion",
+      "reverse": true
+    },
+    "https://openminds.ebrains.eu/vocab/fullName"
+  ]
+}
+```
+
+After adding these query changes to `main.js` and modifying the `displayDatasetVersion()` function accordingly, we now retrieve and visualize more of the information about each dataset.
+If you've checked out the "part4" tag, you should see something like this:
+
+![Screenshot of tutorial web page at the end of Part 4](images/screenshot-part4.png)
+
+
+### Exercise
+
+Extend the query and the display code to show additional linked properties, for example "dataType", "ethicsAssessment", "experimentalApproach" and/or "studyTarget".
+
+When this is successfully running, save your changes using
+
+```
+git stash push
+```
+
+or by committing your changes to a branch, then move to the next stage of the tutorial using
+
+```
+git checkout part5
+```
