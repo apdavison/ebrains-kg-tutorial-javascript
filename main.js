@@ -24,7 +24,7 @@ async function getJSON(url) {
   }
 }
 
-async function postQuery(url, queryObj) {
+async function postJSON(url, queryObj) {
   const config = {
     ...globalConfig,
     method: "POST",
@@ -56,6 +56,14 @@ function checkResponse(response) {
 async function loadKGNode(nodeId) {
   response = await getJSON(
     baseUrl + "instances/" + nodeId + "?stage=RELEASED"
+  );
+  return checkResponse(response);
+}
+
+async function saveKGNode(node) {
+  response = await postJSON(
+    baseUrl + "instances/?space=myspace",
+    node
   );
   return checkResponse(response);
 }
@@ -173,8 +181,44 @@ async function queryKG(searchTerm) {
       },
     ],
   };
-  response = await postQuery(
+  response = await postJSON(
     baseUrl + "queries/?stage=RELEASED&size=10",
+    query
+  );
+  return checkResponse(response);
+}
+
+async function queryPeople() {
+  const query = {
+    "@context": {
+      "@vocab": "https://core.kg.ebrains.eu/vocab/query/",
+      query: "http://example.org/",
+      propertyName: {
+        "@id": "propertyName",
+        "@type": "@id",
+      },
+      path: {
+        "@id": "path",
+        "@type": "@id",
+      },
+    },
+    meta: {
+      type: "https://openminds.ebrains.eu/core/Person",
+      responseVocab: "http://example.org/",
+    },
+    structure: [
+      {
+        propertyName: "query:givenName",
+        path: "https://openminds.ebrains.eu/vocab/givenName",
+      },
+      {
+        propertyName: "query:familyName",
+        path: "https://openminds.ebrains.eu/vocab/familyName",
+      },
+    ],
+  };
+  response = await postJSON(
+    baseUrl + "queries/?stage=IN_PROGRESS&restrictToSpaces=myspace&size=10",
     query
   );
   return checkResponse(response);
@@ -231,6 +275,23 @@ function displayDatasetVersion(datasetVersion, index) {
   </div>`
 }
 
+async function updatePeople() {
+  const anchor = document.getElementById("people");
+  anchor.innerHTML = "";
+  try {
+    const people = await queryPeople();
+    if (people.length > 0) {
+      anchor.innerHTML += "<h2>People saved in &quot;myspace&quot;</h2>\n<ul>"
+      for (let person of people) {
+        anchor.innerHTML +=  `<li>${person.givenName} ${person.familyName}</li>`
+      }
+      anchor.innerHTML += "</ul>"
+    }
+  } catch (error) {
+    showError(error);
+  }
+}
+
 function showError(error) {
   let anchor = document.getElementById("errorMessages");
   anchor.innerHTML = error;
@@ -243,8 +304,8 @@ function removeError() {
   anchor.style.display = "none";
 }
 
-async function main() {
-  const button = document.querySelector("button");
+async function searchView() {
+  const button = document.getElementById("searchButton");
 
   button.addEventListener("click", async (event) => {
     const searchTerm = document.getElementById("searchTerm").value;
@@ -264,5 +325,34 @@ async function main() {
     } catch (error) {
       showError(error);
     }
+  });
+}
+
+async function saveView() {
+  updatePeople();
+
+  const saveButton = document.getElementById("saveButton");
+
+  saveButton.addEventListener("click", async (event) => {
+    removeError();
+
+    const givenName = document.getElementById("givenName").value;
+    const familyName = document.getElementById("familyName").value;
+
+    const person = {
+      "@type": [
+        "https://openminds.ebrains.eu/core/Person"
+      ],
+      "https://openminds.ebrains.eu/vocab/givenName": givenName,
+      "https://openminds.ebrains.eu/vocab/familyName": familyName
+    }
+    try {
+      personWithId = await saveKGNode(person);
+      document.getElementById("givenName").value = "";
+      document.getElementById("familyName").value = "";
+    } catch (error) {
+      showError(error);
+    }
+    updatePeople();
   });
 }

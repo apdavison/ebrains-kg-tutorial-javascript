@@ -580,3 +580,79 @@ or by committing your changes to a branch, then move to the next stage of the tu
 ```
 git checkout part5
 ```
+
+## 7. Writing to the Knowledge Graph
+
+When sharing scientific data and the associated metadata,
+especially sensitive or pre-publication data,
+it is important to consider who has access to the data,
+and who has permissions to create or modify metadata.
+
+The EBRAINS Knowledge Graph is divided into different spaces,
+each with its own access control permissions.
+By default, the core API searches across all spaces for which a user has "read" permission,
+although it is possible to restrict searches to specific spaces.
+
+Public metadata in the EBRAINS KG are stored in curated spaces,
+to which only nominated curators have write access.
+This ensures high standards of quality control.
+
+However, each user has their own private space in the KG, called "myspace",
+and user may also create shared private spaces,
+associated with a collab workspace in the [EBRAINS Collaboratory](https://wiki.ebrains.eu/).
+
+In this part of the tutorial, we will create a simple web form that lets you add metadata nodes,
+conforming to openMINDS schemas, to your "myspace".
+
+For this, we add a new HTML page, [`feeding_the_kg.html`](http://localhost:8000/feeding_the_kg.html),
+containing a form that lets us add `Person` nodes to the KG.
+The openMINDS `Person` schema allows us to specify affiliations, ORCID identifiers, and other properties,
+but for simplicity we'll just specify the person's name in our form.
+
+We use the same `main.js` file as for the search page,
+but we split the `main()` function into two parts: `searchView()` and `saveView()`.
+The `saveView()` function:
+1. queries the KG to retrieve a list of `Person` nodes in your myspace (this will probably we empty at first, unless you have worked with the KG before), and displays this list on the page.
+2. responds to a click on the "Save" button by creating a JSON-LD document conforming to the `Person` schema, and uploading it to the KG, in your "myspace", using the API.
+3. queries the KG again to update the list of `Person` nodes.
+
+One more important thing to note: when querying the endpoint to get a list of people,
+we pass the option `stage=IN_PROGRESS`,
+whereas when retrieving published datasets we used the option `stage=RELEASED`.
+
+When first creating a new node in the KG, it is set to the status "In progress".
+Only after quality control checks, and when we wish to publish the metadata,
+is the node set to "Released" status.
+
+Try adding some people to your "myspace" using the form.
+You can also view them in the [KG Editor app](https://editor.kg.ebrains.eu/),
+as shown below:
+
+![Screenshot of KG Editor](images/screenshot-kgeditor.png)
+
+### Exercise
+
+You may have noticed that the form allows you to enter the same person more than once.
+If not, give it a try to convince yourself!
+
+Add a check that a person's full name does not already exist in "myspace", and show an error message if it does.
+
+**Note**: if you need to delete a person, you can do this in the KG Editor, or use a [DELETE request to the core API](https://core.kg.ebrains.eu/swagger-ui/index.html#/1%20Basic/deleteInstance).
+
+## 8. Conclusions
+
+This is the end of the tutorial.
+The aim was to give you an understanding of some of the key concepts, and to give you experience with querying, retrieving, and creating metadata nodes in the EBRAINS Knowledge Graph, using Javascript.
+
+We are also developing a tutorial on using Python,
+specifically using the [fairgraph](https://fairgraph.readthedocs.io/) library,
+and will add a link here when this is complete.
+
+If you are interested in developing your own web app that works with metadata in the KG,
+the main missing piece not covered in this tutorial is authentication/authorization
+(manually pasting a token is ok for development, but for a production app the token should come from a user login).
+For this we recommend used the "keycloak-js" Javascript library.
+For more information on this, see the [EBRAINS documentation](https://wiki.ebrains.eu/bin/view/Collabs/the-collaboratory/Documentation%20IAM/).
+
+If you have questions, or wish to give feedback on this tutorial,
+please feel free to post in the [discussion on GitHub](https://github.com/apdavison/ebrains-kg-tutorial-javascript/discussions).

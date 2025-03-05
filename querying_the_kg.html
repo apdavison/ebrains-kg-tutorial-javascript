@@ -7,7 +7,7 @@
   <script src="main.js"></script>
   <script>
     window.onload = (event) => {
-      main();
+      searchView();
     }
   </script>
 </head>
@@ -20,7 +20,7 @@
   <div id="form">
     <label for="searchTerm">Search: </label>
     <input id="searchTerm" type="text" size="40" />
-    <button type="button">Search for datasets</button>
+    <button type="button" id="searchButton">Search for datasets</button>
   </div>
 
   <div id="results"></div>
