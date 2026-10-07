@@ -1,5 +1,17 @@
 # Working with data from the EBRAINS Knowledge Graph: using simple Javascript
 
+> [!WARNING]
+> **This is the archived March 2025 version of the tutorial, which uses openMINDS v3.**
+> The EBRAINS Knowledge Graph now uses openMINDS v4, so the code here no longer works against the live KG:
+> queries return no results, and some API requests fail with 404 errors.
+>
+> Please use the [current version of the tutorial](https://github.com/apdavison/ebrains-kg-tutorial-javascript/tree/October2026) instead.
+> To get it, run `git fetch`, then start with `git checkout October2026-part1`.
+>
+> What changed: openMINDS property IRIs moved from `https://openminds.ebrains.eu/vocab/…` to `https://openminds.om-i.org/props/…`,
+> type IRIs moved from `https://openminds.ebrains.eu/core/…` to `https://openminds.om-i.org/types/…`,
+> and the KG API's `queries` and `instances` endpoints no longer accept a trailing slash.
+
 This repository contains a tutorial for working with the [EBRAINS Knowledge Graph](https://docs.kg.ebrains.eu),
 which is the metadata management system of the [EBRAINS Research Infrastructure](https://www.ebrains.eu).
 
