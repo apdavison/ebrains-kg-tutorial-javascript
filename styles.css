@@ -7,6 +7,10 @@ body {
     font-family: sans-serif;
 }
 
+table {
+    display: none;
+}
+
 th {
     text-align: left;
     padding-right: 1em;
@@ -24,4 +28,9 @@ td {
     border-style: solid;
     color: red;
     display: none;
+}
+
+#form {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
 }
