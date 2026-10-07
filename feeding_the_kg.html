@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+
+<head>
+  <title>KG Advanced Tutorial</title>
+  <link href="styles.css" rel="stylesheet" />
+  <script src="main.js"></script>
+  <script>
+    window.onload = (event) => {
+      saveView();
+    }
+  </script>
+</head>
+
+<body>
+  <h1>Writing to the EBRAINS Knowledge Graph</h1>
+
+  <div id="errorMessages"></div>
+
+  <div id="personForm">
+    <label for="givenName">Given name: </label>
+    <input id="givenName" type="text" size="20" />
+    <label for="familyName">Family name: </label>
+    <input id="familyName" type="text" size="20" />
+    <button type="button" id="saveButton">Save</button>
+  </div>
+
+  <div id="people"></div>
+
+</body>
+
+</html>
