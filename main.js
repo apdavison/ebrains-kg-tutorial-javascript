@@ -97,7 +97,13 @@ async function queryKG(searchTerm) {
     structure: [
       {
         propertyName: "query:fullName",
-        path: "https://openminds.om-i.org/props/fullName",
+        path: [
+          {
+            "@id": "https://openminds.om-i.org/props/hasVersion",
+            reverse: true,
+          },
+          "https://openminds.om-i.org/props/fullName",
+        ],
         required: true,
         filter: {
           op: "CONTAINS",
@@ -112,10 +118,33 @@ async function queryKG(searchTerm) {
         propertyName: "query:releaseDate",
         path: "https://openminds.om-i.org/props/releaseDate",
       },
+      {
+        propertyName: "query:digitalIdentifier",
+        singleValue: "FIRST",
+        path: [
+          "https://openminds.om-i.org/props/digitalIdentifier",
+          "https://openminds.om-i.org/props/identifier",
+        ],
+      },
+      {
+        propertyName: "query:repository",
+        path: "https://openminds.om-i.org/props/repository",
+        singleValue: "FIRST",
+        structure: [
+          {
+            propertyName: "query:name",
+            path: "https://openminds.om-i.org/props/name",
+          },
+          {
+            propertyName: "query:IRI",
+            path: "https://openminds.om-i.org/props/IRI",
+          },
+        ],
+      },
     ],
   };
   response = await postQuery(
-    baseUrl + "queries?stage=RELEASED&restrictToSpaces=dataset&size=10",
+    baseUrl + "queries?stage=RELEASED&size=10",
     query
   );
   return checkResponse(response);
@@ -123,6 +152,10 @@ async function queryKG(searchTerm) {
 
 function displayDatasetVersion(datasetVersion, index) {
   /* Return a string containing an HTML table containing dataset version properties. */
+  let repo = "-";
+  if (datasetVersion.repository !== null) {
+    repo = datasetVersion.repository.IRI;
+  }
   return `<div class="datasetVersion">
     <p>#${parseInt(index) + 1}</p>
     <table>
@@ -137,7 +170,15 @@ function displayDatasetVersion(datasetVersion, index) {
         </tr>
         <tr>
           <th>Release date</th>
-          <td id="releaseDate-${index}">${datasetVersion.releaseDate}</td>
+          <td id="releaseDate-${index}">${datasetVersion.releaseDate || "-"}</td>
+        </tr>
+        <tr>
+          <th>Digital identifier</th>
+          <td id="digitalIdentifier-${index}">${datasetVersion.digitalIdentifier}</td>
+        </tr>
+        <tr>
+          <th>Repository</th>
+          <td id="repository-${index}">${repo}</td>
         </tr>
       </tbody>
     </table>
