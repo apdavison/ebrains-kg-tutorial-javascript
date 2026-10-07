@@ -141,6 +141,36 @@ async function queryKG(searchTerm) {
           },
         ],
       },
+      {
+        propertyName: "query:dataType",
+        path: [
+          "https://openminds.om-i.org/props/dataType",
+          "https://openminds.om-i.org/props/name",
+        ],
+        singleValue: "FIRST",
+      },
+      {
+        propertyName: "query:ethicsAssessment",
+        path: [
+          "https://openminds.om-i.org/props/ethicsAssessment",
+          "https://openminds.om-i.org/props/name",
+        ],
+        singleValue: "FIRST",
+      },
+      {
+        propertyName: "query:experimentalApproach",
+        path: [
+          "https://openminds.om-i.org/props/experimentalApproach",
+          "https://openminds.om-i.org/props/name",
+        ],
+      },
+      {
+        propertyName: "query:studyTarget",
+        path: [
+          "https://openminds.om-i.org/props/studyTarget",
+          "https://openminds.om-i.org/props/name",
+        ],
+      },
     ],
   };
   response = await postQuery(
@@ -179,6 +209,22 @@ function displayDatasetVersion(datasetVersion, index) {
         <tr>
           <th>Repository</th>
           <td id="repository-${index}">${repo}</td>
+        </tr>
+        <tr>
+          <th>Data type</th>
+          <td id="dataType-${index}">${datasetVersion.dataType}</td>
+        </tr>
+        <tr>
+          <th>Ethics assessment</th>
+          <td id="ethicsAssessment-${index}">${datasetVersion.ethicsAssessment}</td>
+        </tr>
+        <tr>
+          <th>Experimental approach</th>
+          <td id="experimentalApproach-${index}">${datasetVersion.experimentalApproach.join(", ")}</td>
+        </tr>
+         <tr>
+          <th>Study target</th>
+          <td id="studyTarget-${index}">${datasetVersion.studyTarget.join(", ")}</td>
         </tr>
       </tbody>
     </table>
