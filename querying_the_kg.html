@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+
+<head>
+  <title>KG Advanced Tutorial</title>
+  <link href="styles.css" rel="stylesheet" />
+  <script src="main.js"></script>
+  <script>
+    window.onload = (event) => {
+      main();
+    }
+  </script>
+</head>
+
+<body>
+  <h1>Querying the EBRAINS Knowledge Graph</h1>
+
+  <div id="errorMessages"></div>
+
+  <table>
+    <tbody>
+      <tr>
+        <th>Type</th>
+        <td id="@type"></td>
+      </tr>
+      <tr>
+        <th>Full name</th>
+        <td id="fullName">Loading...</td>
+      </tr>
+      <tr>
+        <th>Version identifier</th>
+        <td id="versionIdentifier"></td>
+      </tr>
+      <tr>
+        <th>Release date</th>
+        <td id="releaseDate"></td>
+      </tr>
+      <tr>
+        <th>Accessibility</th>
+        <td id="accessibility"></td>
+      </tr>
+      <tr>
+        <th>Digital identifier</th>
+        <td id="digitalIdentifier"></td>
+      </tr>
+    </tbody>
+  </table>
+</body>
+
+</html>
