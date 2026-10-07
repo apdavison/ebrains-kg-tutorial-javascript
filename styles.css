@@ -7,10 +7,6 @@ body {
     font-family: sans-serif;
 }
 
-table {
-    display: none;
-}
-
 th {
     text-align: left;
     padding-right: 1em;
@@ -33,4 +29,9 @@ td, th {
 #form {
     margin-top: 2rem;
     margin-bottom: 2rem;
+}
+
+div.datasetVersion {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
 }
